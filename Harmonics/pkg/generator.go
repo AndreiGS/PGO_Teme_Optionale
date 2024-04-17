@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var CHUNK_SIZE = 512
+var CHUNK_SIZE = 4096
 
 func GenerateFromFile(ctx context.Context, file string) {
 	fileName := strings.Replace(file, " ", "_", -1)

@@ -10,6 +10,11 @@ import (
 	ort "github.com/yalue/onnxruntime_go"
 )
 
+var (
+	mean = []float32{23.06966, -0.00452, 1.5650475, 3.119159}
+	std  = []float32{8.339648, 14.216207, 0.92338675, 1.8202546}
+)
+
 type PredictResponse struct {
 	Real float32 `json:"real"`
 	Imag float32 `json:"imag"`
@@ -26,6 +31,21 @@ func Generate(batch [][]float32) ([]PredictResponse, error) {
 		return nil, e
 	}
 	return prediction, nil
+}
+
+func scaleMatrixInPlace(matrix [][]float32, mean []float32, std []float32) {
+	cols := len(matrix[0])
+
+	// Check if mean and std have same length as columns
+	if len(mean) != cols || len(std) != cols {
+		panic("mean and std must have the same length as matrix columns")
+	}
+
+	for i := range matrix {
+		for j := range matrix[i] {
+			matrix[i][j] = (matrix[i][j] - mean[j]) / std[j]
+		}
+	}
 }
 
 func getDefaultSharedLibPath() string {
@@ -70,6 +90,8 @@ func getOutput(output []float32) []PredictResponse {
 }
 
 func predict(batch [][]float32) ([]PredictResponse, error) {
+	scaleMatrixInPlace(batch, mean, std)
+
 	batchSize := int64(len(batch))
 
 	e := ort.InitializeEnvironment()
